@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="JacocoDmo" xmlns:jacoco="antlib:org.jacoco.ant" default="jacoco">
+  <!--Jacoco 的安装路径-->
+  <property name="jacocoantPath" value="F:\jacoco-0.8.6\lib\jacocoant.jar"/>
+  <!--最终生成 .exec 文件的路径，Jacoco 就是根据这个文件生成最终的报告的-->
+  <property name="jacocoexecPath" value="C:\Users\Administrator\Desktop\jacoco-demo\target\coverage\jacoco-integation.exec"/>
+  <!--生成覆盖率报告的路径-->
+  <property name="reportfolderPath" value="C:\Users\Administrator\Desktop\jacoco-demo\jacoco-report"/>
+  <!--远程 Tomcat 服务的 ip 地址-->
+  <property name="server_ip" value="127.0.0.1"/>
+  <!--前面配置的远程 Tomcat 服务打开的端口，要跟上面配置的一样-->
+  <property name="server_port" value="9999"/>
+  <!--源代码路径-->
+  <property name="checkOrderSrcPath" value="C:\Users\Administrator\Desktop\jacoco-demo\src\main\java" />
+  <!--.class 文件路径-->
+  <property name="checkOrderClasspath" value="C:\Users\Administrator\Desktop\jacoco-demo\target\classes" />
+
+  <!--让 ant 知道去哪儿找 Jacoco-->
+  <taskdef uri="antlib:org.jacoco.ant" resource="org/jacoco/ant/antlib.xml">
+      <classpath path="${jacocoantPath}" />
+  </taskdef>
+
+  <!--dump 任务:
+      根据前面配置的 ip 地址，和端口号，
+      访问目标 Tomcat 服务，并生成 .exec 文件。-->
+  <target name="dump">
+      <jacoco:dump address="${server_ip}" reset="false" destfile="${jacocoexecPath}" port="${server_port}" append="true"/>
+  </target>
+  
+  <!--jacoco 任务:
+      根据前面配置的源代码路径和 .class 文件路径，
+      根据 dump 后，生成的 .exec 文件，生成最终的 html 覆盖率报告。-->
+  <target name="report">
+      <delete dir="${reportfolderPath}" />
+      <mkdir dir="${reportfolderPath}" />
+      
+      <jacoco:report>
+          <executiondata>
+              <file file="${jacocoexecPath}" />
+          </executiondata>
+              
+          <structure name="JaCoCo Report">
+              <group name="Check Order related">           
+                  <classfiles>
+                      <fileset dir="${checkOrderClasspath}">
+                          <!-- 过滤不必要的文件 -->
+                          <exclude name="**/R.class"/>
+                          <exclude name="**/R$*.class"/>
+                          <exclude name="**/*$ViewInjector*.*"/>
+                          <exclude name="**/BuildConfig.*"/>
+                          <exclude name="**/Manifest*.*"/>
+                      </fileset>
+                  </classfiles>
+                  <sourcefiles encoding="UTF-8">
+                      <fileset dir="${checkOrderSrcPath}" />
+                  </sourcefiles>
+              </group>
+          </structure>
+          <html destdir="${reportfolderPath}" encoding="UTF-8" />
+          <csv destfile="${reportfolderPath}/coverage-report.csv" encoding="UTF-8"/>
+          <xml destfile="${reportfolderPath}/coverage-report.xml" encoding="UTF-8"/>         
+      </jacoco:report>
+  </target>
+</project>
