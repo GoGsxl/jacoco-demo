@@ -1,14 +1,60 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="JacocoDemo" xmlns:jacoco="antlib:org.jacoco.ant" default="jacoco">
-    
+
+  <property name="reportfolderPath" value="${WORKSPACE}/jacoco-report"/>
+  
+  <!--.class 文件路径-->
+  <property name="checkOrderClasspath" value="${WORKSPACE}/target/classes" />
+  <!--源代码路径-->
+  <property name="checkOrderSrcPath" value="${WORKSPACE}/src/main/java" />
+  
   <taskdef uri="antlib:org.jacoco.ant" resource="org/jacoco/ant/antlib.xml">
       <classpath path="${jacocoantPath}" />
   </taskdef>
   
-  <!--dump 任务: 根据前面配置的 ip 地址，和端口号，访问目标 Tomcat 服务，并生成 .exec 文件。-->
+    <!--让 ant 知道去哪儿找 Jacoco-->
+  <taskdef uri="antlib:org.jacoco.ant" resource="org/jacoco/ant/antlib.xml">
+      <classpath path="${jacocoantPath}" />
+  </taskdef>
+  
+<!--dump 任务: 根据前面配置的 ip 地址，和端口号，访问目标 Tomcat 服务，并生成 .exec 文件。-->
 <!-- reset="true"是指在dump完成之后，重置jvm中的覆盖率数据为空。append="true"是指dump出来的exec文件为增量方式 -->
   <target name="dump">
       <jacoco:dump address="${server_ip}" reset="${reset}" destfile="${jacocoexecPath}" port="${server_port}" append="${append}"/>
   </target>
-  
+
+  <!--jacoco 任务:
+      根据前面配置的源代码路径和 .class 文件路径，
+      根据 dump 后，生成的 .exec 文件，生成最终的 html 覆盖率报告。-->
+  <target name="report">
+      <delete dir="${reportfolderPath}" />
+      <mkdir dir="${reportfolderPath}" />
+      
+      <jacoco:report>
+          <executiondata>
+              <file file="${jacocoexecPath}" />
+          </executiondata>
+              
+          <structure name="JaCoCo Report">
+              <group name="Check Order related">           
+                  <classfiles>
+                      <fileset dir="${checkOrderClasspath}">
+                          <!-- 过滤不必要的文件 -->
+                          <exclude name="**/R.class"/>
+                          <exclude name="**/R$*.class"/>
+                          <exclude name="**/*$ViewInjector*.*"/>
+                          <exclude name="**/BuildConfig.*"/>
+                          <exclude name="**/Manifest*.*"/>
+                      </fileset>
+                  </classfiles>
+                  <sourcefiles encoding="UTF-8">
+                      <fileset dir="${checkOrderSrcPath}" />
+                  </sourcefiles>
+              </group>
+          </structure>
+          <html destdir="${reportfolderPath}" encoding="UTF-8" />
+          <csv destfile="${reportfolderPath}/coverage-report.csv" encoding="UTF-8"/>
+          <xml destfile="${reportfolderPath}/coverage-report.xml" encoding="UTF-8"/>         
+      </jacoco:report>
+  </target>
 </project>
